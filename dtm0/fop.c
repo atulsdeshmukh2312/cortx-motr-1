@@ -61,6 +61,7 @@ static void dtm0_fom_fini(struct m0_fom *fom);
 static size_t dtm0_fom_locality(const struct m0_fom *fom);
 static int dtm0_cas_fop_prepare(struct m0_reqh      *reqh,
 				struct dtm0_req_fop *req,
+				struct m0_fop_type  *cas_fopt,
 				struct m0_fop      **cas_fop_out);
 static int dtm0_cas_fom_spawn(
 	struct dtm0_fom *dfom,
@@ -567,35 +568,28 @@ static void dtm0_cas_sdev_id_set(
 
 static int dtm0_cas_fop_prepare(struct m0_reqh      *reqh,
 				struct dtm0_req_fop *req,
+				struct m0_fop_type  *cas_fopt,
 				struct m0_fop      **cas_fop_out)
 {
-	int                             rc;
-	struct m0_cas_op               *cas_op;
-	struct m0_fop                  *cas_fop;
-	struct m0_cas_dtm0_log_payload *dtm_payload;
-	struct m0_fop_type             *cas_fopt = NULL;
+	int               rc;
+	struct m0_cas_op *cas_op;
+	struct m0_fop    *cas_fop;
+
 	M0_ENTRY();
 
 	*cas_fop_out = NULL;
 
-	M0_ALLOC_PTR(dtm_payload);
+	M0_ALLOC_PTR(cas_op);
 	M0_ALLOC_PTR(cas_fop);
 
-	if (dtm_payload == NULL || cas_fop == NULL) {
+	if (cas_op == NULL || cas_fop == NULL) {
 		rc = -ENOMEM;
 	} else {
 		rc = m0_xcode_obj_dec_from_buf(
-			&M0_XCODE_OBJ(m0_cas_dtm0_log_payload_xc, dtm_payload),
+			&M0_XCODE_OBJ(m0_cas_op_xc, cas_op),
 			req->dtr_payload.b_addr,
 			req->dtr_payload.b_nob);
 		if (rc == 0) {
-			cas_op = &dtm_payload->cdg_cas_op;
-			if (dtm_payload->cdg_cas_opcode == M0_CAS_PUT_FOP_OPCODE)
-				 cas_fopt = &cas_put_fopt;
-			else if(dtm_payload->cdg_cas_opcode == M0_CAS_DEL_FOP_OPCODE)
-				 cas_fopt = &cas_del_fopt;
-			M0_ASSERT(cas_fopt != NULL);
-
 			dtm0_cas_sdev_id_set(
 				reqh, cas_fopt->ft_fom_type.ft_rstype, cas_op);
 			m0_fop_init(cas_fop, cas_fopt, cas_op,
@@ -607,7 +601,7 @@ static int dtm0_cas_fop_prepare(struct m0_reqh      *reqh,
 	if (rc == 0) {
 		*cas_fop_out = cas_fop;
 	} else {
-		m0_free(dtm_payload);
+		m0_free(cas_op);
 		m0_free(cas_fop);
 	}
 
@@ -648,7 +642,7 @@ static int dtm0_rmsg_fom_tick(struct m0_fom *fom)
 				    M0_CONF_HA_PROCESS_DTM_RECOVERED);
 		*/
 		rc = dtm0_cas_fop_prepare(dfom->dtf_fom.fo_service->rs_reqh,
-					  req, &cas_fop);
+					  req, &cas_put_fopt, &cas_fop);
 		if (rc == 0) {
 			rc = dtm0_cas_fom_spawn(dfom, cas_fop,
 						&dtm0_cas_done_cb);
