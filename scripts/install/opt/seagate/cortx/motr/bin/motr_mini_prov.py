@@ -734,7 +734,7 @@ def motr_config_k8(self):
     update_copy_motr_config_file(self)
 
     # Modify motr config file for memory request
-    motr_tune_memory_config(self)
+    #motr_tune_memory_config(self)
 
     return
 
