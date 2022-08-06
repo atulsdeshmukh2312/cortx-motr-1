@@ -1965,7 +1965,7 @@ static int stob_ad_write_prepare(struct m0_stob_io        *io,
 	M0_ADDB2_ADD(M0_AVI_STOB_IO_REQ, io->si_id, M0_AVI_AD_WR_PREPARE);
 	/* Get total size of buffer */
 	todo = m0_vec_count(&io->si_user.ov_vec);
-	M0_ENTRY("op=%d sz=%lu", io->si_opcode, (unsigned long)todo);
+	M0_ENTRY("Atul_WRITE_PREPARE op=%d sz=%lu", io->si_opcode, (unsigned long)todo);
 	back = &aio->ai_back;
 	M0_SET0(&head);
 	wext = &head;
@@ -1985,11 +1985,12 @@ static int stob_ad_write_prepare(struct m0_stob_io        *io,
 		/* Get balloc extent length */
 		got = m0_ext_length(&wext->we_ext);
 		M0_ASSERT(todo >= got);
-		M0_LOG(M0_DEBUG, "got=%" PRId64 ": " EXT_F,
+		M0_LOG(M0_DEBUG, "Atul_AD got=%" PRId64 ": " EXT_F,
 		       got, EXT_P(&wext->we_ext));
 		todo -= got;
 		++bfrags;
 		if (todo > 0) {
+			M0_ASSERT(bfrags < BALLOC_FRAGS_MAX);
 			if (bfrags >= BALLOC_FRAGS_MAX) {
 				rc = M0_ERR(-ENOSPC);
 				break;
