@@ -1198,12 +1198,7 @@ static bool balloc_got_freespace(const struct m0_balloc *ctx,
 	       "bsb_groupsize=%llu "
 	       "bsb_bsbits=%lu "
 	       "bsb_gsbits=%lu "
-	       "bsb_groupcount=%llu "
 	       "bsb_prealloc_count=%llu "
-	       "bsb_format_time=%llu "
-	       "bsb_write_time=%llu "
-	       "bsb_mnt_time=%llu "
-	       "bsb_last_check_time=%llu "
 	       "bsb_stripe_size=%llu "
 	       "blocks=%llu",
 	       (unsigned long long)ctx->cb_sb.bsb_freeblocks,
@@ -1212,12 +1207,7 @@ static bool balloc_got_freespace(const struct m0_balloc *ctx,
 	       (unsigned long long)ctx->cb_sb.bsb_groupsize,
 	       (unsigned long)ctx->cb_sb.bsb_bsbits,
 	       (unsigned long)ctx->cb_sb.bsb_gsbits,
-	       (unsigned long long)ctx->cb_sb.bsb_groupcount,
 	       (unsigned long long)ctx->cb_sb.bsb_prealloc_count,
-	       (unsigned long long)ctx->cb_sb.bsb_format_time,
-	       (unsigned long long)ctx->cb_sb.bsb_write_time,
-	       (unsigned long long)ctx->cb_sb.bsb_mnt_time,
-	       (unsigned long long)ctx->cb_sb.bsb_last_check_time,
 	       (unsigned long long)ctx->cb_sb.bsb_stripe_size,
 	       (unsigned long long)blocks);
 
