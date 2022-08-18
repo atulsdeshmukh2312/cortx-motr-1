@@ -653,7 +653,7 @@ static int balloc_sb_write(struct m0_balloc            *bal,
 	if (number_of_groups < 1)
 		number_of_groups = 1;
 
-	M0_LOG(M0_DEBUG, "total=%llu bs=%llu groupsize=%llu groups=%llu "
+	M0_LOG(M0_ALWAYS, "Atul total=%llu bs=%llu groupsize=%llu groups=%llu "
 			 "unused=%llu",
 		(unsigned long long)req->bfr_totalsize,
 		(unsigned long long)req->bfr_blocksize,
@@ -689,8 +689,12 @@ static int balloc_sb_write(struct m0_balloc            *bal,
 				    req->bfr_spare_reserved_blocks;
 	sb->bsb_freeblocks	= (number_of_groups << sb->bsb_gsbits) -
 					sb->bsb_freespare;
+	M0_LOG(M0_ALWAYS, "Atul SPARE_SPACE sb->bsb_sparesize=%llu sb->bsb_freespare=%llu sb->bsb_freeblocks=%llu",
+		(unsigned long long)sb->bsb_sparesize, (unsigned long long)sb->bsb_freespare, (unsigned long long)sb->bsb_freeblocks);
 #else
 	sb->bsb_freeblocks      = (number_of_groups << sb->bsb_gsbits);
+	M0_LOG(M0_ALWAYS, "Atul NON SPARE_SPACE sb->bsb_freeblocks=%llu", (unsigned long long)sb->bsb_freeblocks);
+
 #endif
 	sb->bsb_prealloc_count	= 16;
 	sb->bsb_format_time	= ((uint64_t)now.tv_sec) << 32 | now.tv_usec;
@@ -700,6 +704,16 @@ static int balloc_sb_write(struct m0_balloc            *bal,
 	sb->bsb_mnt_count	= 0;
 	sb->bsb_max_mnt_count	= 1024;
 	sb->bsb_stripe_size	= 0;
+
+	M0_LOG(M0_ALWAYS, "Atul sb->bsb_totalsize=%llu sb->bsb_blocksize=%llu sb->bsb_groupsize=%llu "
+			 "bsb_bsbits=%u bsb_gsbits=%u bsb_groupcount=%llu bsb_prealloc_count=%llu",
+		(unsigned long long)sb->bsb_totalsize,
+		(unsigned long long)sb->bsb_blocksize,
+		(unsigned long long)sb->bsb_groupsize,
+		(unsigned int)sb->bsb_bsbits,
+		(unsigned int)sb->bsb_gsbits,
+		(unsigned long long)sb->bsb_groupcount,
+		(unsigned long long)sb->bsb_prealloc_count);
 
 	rc = sb_update(bal, grp);
 	if (rc != 0)

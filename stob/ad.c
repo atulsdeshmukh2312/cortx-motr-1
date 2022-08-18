@@ -447,6 +447,15 @@ static int stob_ad_domain_init(struct m0_stob_type *type,
 	m0_be_emap_init(&adom->sad_adata, seg);
 	ballroom = adom->sad_ballroom;
 	m0_balloc_init(b2m0(ballroom));
+
+	M0_LOG(M0_ALWAYS, "Atul caling balloc_init from ad.c. "
+			  "adom->sad_container_size=%llu "
+			  "adom->sad_blocks_per_group=%llu "
+			  "adom->sad_spare_blocks_per_group=%llu",
+			  (unsigned long long)adom->sad_container_size,
+			  (unsigned long long)adom->sad_blocks_per_group,
+			  (unsigned long long)adom->sad_spare_blocks_per_group);
+
 	rc = ballroom->ab_ops->bo_init(ballroom, seg,
 				       adom->sad_bshift,
 				       adom->sad_container_size,
