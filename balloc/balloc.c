@@ -2976,6 +2976,8 @@ out_unlock:
 out:
 	return M0_RC(rc);
 }
+static m0_bcount_t prev_freeblks = 0;
+static m0_bcount_t diff_freeblks = 0;
 
 /**
  * allocate from underlying container.
@@ -3019,6 +3021,19 @@ static int balloc_alloc(struct m0_ad_balloc *ballroom, struct m0_dtx *tx,
 			motr->cb_last = out->e_end;
 			m0_mutex_unlock(&motr->cb_sb_mutex.bm_u.mutex);
 		}
+	}
+	if (diff_freeblks == 0 && prev_freeblks == 0) {
+		MO_LOG(M0_ALWAYS, "Atul prev_freeblks=%llu and motr->cb_sb.bsb_freeblocks=%llu and diff_freeblks=%llu\n",
+			(unsigned long long)prev_freeblks, (unsigned long long)motr->cb_sb.bsb_freeblocks,
+			(unsigned long long)diff_freeblks);
+		prev_freeblks = motr->cb_sb.bsb_freeblocks;
+		
+	} else {
+		diff_freeblks = prev_freeblks - motr->cb_sb.bsb_freeblocks;
+		MO_LOG(M0_ALWAYS, "Atul prev_freeblks=%llu and motr->cb_sb.bsb_freeblocks=%llu and diff_freeblks=%llu\n",
+			(unsigned long long)prev_freeblks, (unsigned long long)motr->cb_sb.bsb_freeblocks,
+			(unsigned long long)diff_freeblks);
+		prev_freeblks = motr->cb_sb.bsb_freeblocks;
 	}
 	M0_LOG(M0_DEBUG, "BAlloc=%p rc=%d freeblocks %llu -> %llu",
 			 motr, rc,
