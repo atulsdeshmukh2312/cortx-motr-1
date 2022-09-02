@@ -3023,14 +3023,14 @@ static int balloc_alloc(struct m0_ad_balloc *ballroom, struct m0_dtx *tx,
 		}
 	}
 	if (diff_freeblks == 0 && prev_freeblks == 0) {
-		MO_LOG(M0_ALWAYS, "Atul prev_freeblks=%llu and motr->cb_sb.bsb_freeblocks=%llu and diff_freeblks=%llu\n",
+		M0_LOG(M0_ALWAYS, "Atul prev_freeblks=%llu and motr->cb_sb.bsb_freeblocks=%llu and diff_freeblks=%llu\n",
 			(unsigned long long)prev_freeblks, (unsigned long long)motr->cb_sb.bsb_freeblocks,
 			(unsigned long long)diff_freeblks);
 		prev_freeblks = motr->cb_sb.bsb_freeblocks;
 		
 	} else {
 		diff_freeblks = prev_freeblks - motr->cb_sb.bsb_freeblocks;
-		MO_LOG(M0_ALWAYS, "Atul prev_freeblks=%llu and motr->cb_sb.bsb_freeblocks=%llu and diff_freeblks=%llu\n",
+		M0_LOG(M0_ALWAYS, "Atul prev_freeblks=%llu and motr->cb_sb.bsb_freeblocks=%llu and diff_freeblks=%llu\n",
 			(unsigned long long)prev_freeblks, (unsigned long long)motr->cb_sb.bsb_freeblocks,
 			(unsigned long long)diff_freeblks);
 		prev_freeblks = motr->cb_sb.bsb_freeblocks;

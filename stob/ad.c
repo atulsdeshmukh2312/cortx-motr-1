@@ -1974,7 +1974,7 @@ static int stob_ad_write_prepare(struct m0_stob_io        *io,
 	M0_ADDB2_ADD(M0_AVI_STOB_IO_REQ, io->si_id, M0_AVI_AD_WR_PREPARE);
 	/* Get total size of buffer */
 	todo = m0_vec_count(&io->si_user.ov_vec);
-	M0_ENTRY("Atul_WRITE_PREPARE op=%d sz=%lu", io->si_opcode, (unsigned long)todo);
+	M0_ENTRY("Atul_WRITE_PREPARE op=%d todo=%lu", io->si_opcode, (unsigned long)todo);
 	back = &aio->ai_back;
 	M0_SET0(&head);
 	wext = &head;
@@ -1996,8 +1996,10 @@ static int stob_ad_write_prepare(struct m0_stob_io        *io,
 		M0_ASSERT(todo >= got);
 		M0_LOG(M0_DEBUG, "Atul_AD got=%" PRId64 ": " EXT_F,
 		       got, EXT_P(&wext->we_ext));
+		M0_LOG(M0_ALWAYS, "Before Atul todo="PRId64 "and got="PRId64 "and bfrags=%u\n", todo, got, bfrags);
 		todo -= got;
 		++bfrags;
+		M0_LOG(M0_ALWAYS, "After Atul todo="PRId64 "and got="PRId64 "and bfrags=%u\n", todo, got, bfrags);
 		if (todo > 0) {
 			M0_ASSERT(bfrags < BALLOC_FRAGS_MAX);
 			if (bfrags >= BALLOC_FRAGS_MAX) {
