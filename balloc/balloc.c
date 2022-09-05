@@ -265,7 +265,7 @@ static bool is_any(uint64_t alloc_flag);
 
 static void balloc_debug_dump_extent(const char *tag, struct m0_ext *ex)
 {
-if (ENABLE_BALLOC_DUMP) {
+if (1) {
 
 	if (ex == NULL)
 		return;
@@ -277,7 +277,7 @@ if (ENABLE_BALLOC_DUMP) {
 M0_INTERNAL void m0_balloc_debug_dump_group(const char *tag,
 					    struct m0_balloc_group_info *grp)
 {
-if (ENABLE_BALLOC_DUMP) {
+if (1) {
 	if (grp == NULL)
 		return;
 
@@ -298,7 +298,7 @@ if (ENABLE_BALLOC_DUMP) {
 M0_INTERNAL void m0_balloc_debug_dump_group_extent(const char *tag,
 					struct m0_balloc_group_info *grp)
 {
-if (ENABLE_BALLOC_DUMP) {
+if (1) {
 	struct m0_lext	*ex;
 
 	if (grp == NULL || !grp->bgi_extents_loaded)
@@ -318,7 +318,7 @@ if (ENABLE_BALLOC_DUMP) {
 M0_INTERNAL void m0_balloc_debug_dump_sb(const char *tag,
 					 struct m0_balloc_super_block *sb)
 {
-if (ENABLE_BALLOC_DUMP) {
+if (1) {
 	if (sb == NULL)
 		return;
 
@@ -655,7 +655,7 @@ static int balloc_sb_write(struct m0_balloc            *bal,
 	if (number_of_groups < 1)
 		number_of_groups = 1;
 
-	M0_LOG(M0_DEBUG, "total=%llu bs=%llu groupsize=%llu groups=%llu "
+	M0_LOG(M0_ALWAYS, "Atul total=%llu bs=%llu groupsize=%llu groups=%llu "
 			 "unused=%llu",
 		(unsigned long long)req->bfr_totalsize,
 		(unsigned long long)req->bfr_blocksize,
@@ -691,8 +691,11 @@ static int balloc_sb_write(struct m0_balloc            *bal,
 				    req->bfr_spare_reserved_blocks;
 	sb->bsb_freeblocks	= (number_of_groups << sb->bsb_gsbits) -
 					sb->bsb_freespare;
+	M0_LOG(M0_ALWAYS, "Atul SPARE_SPACE sb->bsb_sparesize=%llu sb->bsb_freespare=%llu sb->bsb_freeblocks=%llu",
+		(unsigned long long)sb->bsb_sparesize, (unsigned long long)sb->bsb_freespare, (unsigned long long)sb->bsb_freeblocks);
 #else
 	sb->bsb_freeblocks      = (number_of_groups << sb->bsb_gsbits);
+	M0_LOG(M0_ALWAYS, "Atul NON SPARE_SPACE sb->bsb_freeblocks=%llu", (unsigned long long)sb->bsb_freeblocks);
 #endif
 	sb->bsb_prealloc_count	= 16;
 	sb->bsb_format_time	= ((uint64_t)now.tv_sec) << 32 | now.tv_usec;
@@ -702,6 +705,16 @@ static int balloc_sb_write(struct m0_balloc            *bal,
 	sb->bsb_mnt_count	= 0;
 	sb->bsb_max_mnt_count	= 1024;
 	sb->bsb_stripe_size	= 0;
+
+	M0_LOG(M0_ALWAYS, "Atul sb->bsb_totalsize=%llu sb->bsb_blocksize=%llu sb->bsb_groupsize=%llu "
+			 "bsb_bsbits=%u bsb_gsbits=%u bsb_groupcount=%llu bsb_prealloc_count=%llu",
+		(unsigned long long)sb->bsb_totalsize,
+		(unsigned long long)sb->bsb_blocksize,
+		(unsigned long long)sb->bsb_groupsize,
+		(unsigned int)sb->bsb_bsbits,
+		(unsigned int)sb->bsb_gsbits,
+		(unsigned long long)sb->bsb_groupcount,
+		(unsigned long long)sb->bsb_prealloc_count);
 
 	rc = sb_update(bal, grp);
 	if (rc != 0)
@@ -1190,9 +1203,27 @@ static bool balloc_got_freespace(const struct m0_balloc *ctx,
 	int rc;
 	M0_ENTRY();
 
-	M0_LOG(M0_DEBUG, "bsb_freeblocks=%llu blocks=%llu",
+	M0_LOG(M0_ALWAYS, "Atul printing super_block data..."
+	       "bsb_freeblocks=%llu "
+	       "bsb_totalsize=%llu "
+	       "bsb_blocksize=%llu "
+	       "bsb_groupsize=%llu "
+	       "bsb_bsbits=%lu "
+	       "bsb_gsbits=%lu "
+	       "bsb_prealloc_count=%llu "
+	       "bsb_stripe_size=%llu "
+	       "blocks=%llu",
 	       (unsigned long long)ctx->cb_sb.bsb_freeblocks,
-	       (unsigned long long)blocks);
+	       (unsigned long long)ctx->cb_sb.bsb_totalsize,
+	       (unsigned long long)ctx->cb_sb.bsb_blocksize,
+	       (unsigned long long)ctx->cb_sb.bsb_groupsize,
+	       (unsigned long)ctx->cb_sb.bsb_bsbits,
+	       (unsigned long)ctx->cb_sb.bsb_gsbits,
+	       (unsigned long long)ctx->cb_sb.bsb_prealloc_count,
+	       (unsigned long long)ctx->cb_sb.bsb_stripe_size,
+ 	       (unsigned long long)blocks);
+
+
 	rc =
 #ifdef __SPARE_SPACE__
 	is_any(alloc_flags) ? (ctx->cb_sb.bsb_freespare >= blocks ||
@@ -1698,12 +1729,15 @@ static int balloc_alloc_db_update(struct m0_balloc *motr, struct m0_be_tx *tx,
 	maxchunk = zp->bzp_maxchunk;
 
 	balloc_debug_dump_extent("current=", cur);
-
+	M0_LOG(M0_ALWAYS, "Atul m0_ext_length(cur)=%llu and zp->bzp_maxchunk=%llu", (unsigned long long)(m0_ext_length(cur)),
+		(unsigned long long)zp->bzp_maxchunk);
 	if (m0_ext_length(cur) == zp->bzp_maxchunk) {
 		/* find next to max sized chunk */
 		maxchunk = 0;
 		m0_list_for_each_entry(&zp->bzp_extents, le,
 				       struct m0_lext, le_link) {
+			M0_LOG(M0_ALWAYS, "Atul printing le->le_ext");
+			balloc_debug_dump_extent("le=", &le->le_ext);
 			if (&le->le_ext == cur)
 				continue;
 			maxchunk = max_check(maxchunk,
@@ -1714,6 +1748,8 @@ static int balloc_alloc_db_update(struct m0_balloc *motr, struct m0_be_tx *tx,
 	M0_LOG(M0_DEBUG, "bzp_maxchunk=0x%" PRIx64 " next_maxchunk=0x%"PRIx64,
 	       zp->bzp_maxchunk, maxchunk);
 
+	balloc_debug_dump_extent("current=", cur);
+	balloc_debug_dump_extent("tgt=", tgt);
 	if (cur->e_end == tgt->e_end) {
 		key = (struct m0_buf)M0_BUF_INIT_PTR(&cur->e_end);
 
@@ -2184,9 +2220,9 @@ static int balloc_simple_scan_group(struct balloc_allocation_context *bac,
 				    struct m0_balloc_group_info *grp,
 				    enum m0_balloc_allocation_flag alloc_flag)
 {
-/*
+
 	struct m0_balloc_super_block *sb = &bac->bac_ctxt->cb_sb;
-*/
+
 	struct m0_ext	ex;
 	m0_bcount_t	len;
 	m0_bindex_t     start;
@@ -2211,6 +2247,13 @@ static int balloc_simple_scan_group(struct balloc_allocation_context *bac,
 			break;
 	}
 */
+	M0_LOG(M0_ALWAYS, "Atul searching at grp_no=%d (grp_size = %d) for order = %d "
+			"len=%d:%x",
+			(int)grp->bgi_groupno,
+			(int)sb->bsb_groupsize,
+			(int)bac->bac_order2,
+			(int)len,
+			(int)len);
 
 	found = balloc_find_extent_buddy(bac, grp, len, alloc_flag, &ex);
 	if (found) {
@@ -2559,6 +2602,8 @@ repeat:
 		 */
 		group = balloc_bn2gn(bac->bac_goal.e_start, bac->bac_ctxt);
 
+		M0_LOG(M0_ALWAYS, "Atul bac->bac_goal.e_start=0x%lx and group=%llu and ngroups=%llu", bac->bac_goal.e_start,
+			(unsigned long long)group, (unsigned long long)ngroups);
 		for (i = 0; i < ngroups; group++, i++) {
 			struct m0_balloc_group_info *grp;
 
@@ -2566,8 +2611,8 @@ repeat:
 				group = 0;
 
 			grp = m0_balloc_gn2info(bac->bac_ctxt, group);
-			// m0_balloc_debug_dump_group("searching group ...",
-			//			 grp);
+			m0_balloc_debug_dump_group("searching group ...",
+						 grp);
 
 			rc = m0_balloc_trylock_group(grp);
 			if (rc != 0) {
@@ -2594,7 +2639,7 @@ repeat:
 			}
 			bac->bac_scanned++;
 
-			/* m0_balloc_debug_dump_group_extent("AAA", grp); */
+			m0_balloc_debug_dump_group_extent("AAA", grp);
 			rc = 1;
 #ifdef __SPARE_SPACE__
 			if (is_spare(bac->bac_flags))
@@ -2662,6 +2707,8 @@ static int allocate_blocks(int cr, struct balloc_allocation_context *bac,
 	M0_PRE(!is_any(alloc_type));
 	M0_PRE(is_spare(alloc_type) || is_normal(alloc_type));
 
+	M0_LOG(M0_ALWAYS, "Atul alloc_type=%d and cr=%d and bac->bac_ctxt->cb_sb.bsb_stripe_size=%llu",
+		alloc_type, cr, (unsigned long long)bac->bac_ctxt->cb_sb.bsb_stripe_size);
 	if (cr == 0 ||
 	    (cr == 1 && len == bac->bac_ctxt->cb_sb.bsb_stripe_size))
 		rc = balloc_simple_scan_group(bac, grp, alloc_type);
@@ -2670,10 +2717,18 @@ static int allocate_blocks(int cr, struct balloc_allocation_context *bac,
 
 	/* update db according to the allocation result */
 	if (rc == 0 && bac->bac_status == M0_BALLOC_AC_FOUND) {
+		M0_LOG(M0_ALWAYS, "Atul len=%llu and len(bac->bac_best)=%llu", (unsigned long long)len,
+			(unsigned long long)m0_ext_length(&bac->bac_best));
 		if (len < m0_ext_length(&bac->bac_best))
 			balloc_new_preallocation(bac);
+		M0_LOG(M0_ALWAYS, "Atul alloc_type=%llu ac->bac_final="EXT_F, (unsigned long long)alloc_type, EXT_P(&bac->bac_final));
+		M0_LOG(M0_ALWAYS, "Atul cur="EXT_F, EXT_P(cur));
+
 		M0_ASSERT(is_extent_free(grp, &bac->bac_final, alloc_type,
 					 &cur));
+		M0_LOG(M0_ALWAYS, "Atul bac->bac_final="EXT_F, EXT_P(&bac->bac_final));
+		M0_LOG(M0_ALWAYS, "Atul cur="EXT_F, EXT_P(cur));
+
 		rc = balloc_alloc_db_update(bac->bac_ctxt, bac->bac_tx, grp,
 					    &bac->bac_final, alloc_type, cur);
 		M0_ASSERT_INFO(rc == 0, "rc = %d", rc);
@@ -2978,6 +3033,9 @@ out:
 	return M0_RC(rc);
 }
 
+static m0_bcount_t prev_freeblks = 0;
+static m0_bcount_t diff_freeblks = 0;
+
 /**
  * allocate from underlying container.
  * @param count count of bytes. count will be first aligned to block boundry.
@@ -3021,6 +3079,21 @@ static int balloc_alloc(struct m0_ad_balloc *ballroom, struct m0_dtx *tx,
 			m0_mutex_unlock(&motr->cb_sb_mutex.bm_u.mutex);
 		}
 	}
+
+	if (diff_freeblks == 0 && prev_freeblks == 0) {
+		M0_LOG(M0_ALWAYS, "Atul prev_freeblks=%llu and motr->cb_sb.bsb_freeblocks=%llu and diff_freeblks=%llu",
+			(unsigned long long)prev_freeblks, (unsigned long long)motr->cb_sb.bsb_freeblocks,
+			(unsigned long long)diff_freeblks);
+		prev_freeblks = motr->cb_sb.bsb_freeblocks;
+		
+	} else {
+		diff_freeblks = prev_freeblks - motr->cb_sb.bsb_freeblocks;
+		M0_LOG(M0_ALWAYS, "Atul prev_freeblks=%llu and motr->cb_sb.bsb_freeblocks=%llu and diff_freeblks=%llu",
+			(unsigned long long)prev_freeblks, (unsigned long long)motr->cb_sb.bsb_freeblocks,
+			(unsigned long long)diff_freeblks);
+		prev_freeblks = motr->cb_sb.bsb_freeblocks;
+	}
+
 	M0_LOG(M0_DEBUG, "BAlloc=%p rc=%d freeblocks %llu -> %llu",
 			 motr, rc,
 			 (unsigned long long)freeblocks,
